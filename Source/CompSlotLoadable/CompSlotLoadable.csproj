@@ -54,8 +54,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CompProperties_SlotLoadable.cs" />
+    <Compile Include="CompProperties_SlottedBonus.cs" />
     <Compile Include="CompSlotLoadable.cs" />
     <Compile Include="CompSlotLoadableDefOf.cs" />
+    <Compile Include="CompSlottedBonus.cs" />
     <Compile Include="HarmonyCompSlotLoadable.cs" />
     <Compile Include="JobDriver_GatherSlotItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

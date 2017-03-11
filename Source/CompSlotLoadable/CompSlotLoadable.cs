@@ -184,7 +184,7 @@ namespace CompSlotLoadable
 
         public bool TryLoadSlot(Thing thing)
         {
-            Log.Message("TryLoadSlot Called");
+            //Log.Message("TryLoadSlot Called");
             isGathering = false;
             if (slots != null)
             {
@@ -194,8 +194,10 @@ namespace CompSlotLoadable
                     if (loadSlot == null) loadSlot = slots.FirstOrDefault((SlotLoadable y) => y.CanLoad(thing.def));
                     if (loadSlot != null)
                     {
-                        loadSlot.TryLoadSlot(thing, true);
-                        return true;
+                        if (loadSlot.TryLoadSlot(thing, true))
+                        {
+                            return true;
+                        }
                     }
                 }
             }
@@ -274,10 +276,15 @@ namespace CompSlotLoadable
                 //Func<Rect, bool> extraPartOnGUI = (Rect rect) => Widgets.InfoCardButton(rect.x + 5f, rect.y + (rect.height - 24f) / 2f, current);
                 floatList.Add(new FloatMenuOption(text, delegate
                 {
-                    slot.TryEmptySlot();
+                    TryEmptySlot(slot);
                 }, MenuOptionPriority.Default, null, null, 29f, null, null));
             }
             Find.WindowStack.Add(new FloatMenu(floatList));
+        }
+
+        public virtual void TryEmptySlot(SlotLoadable slot)
+        {
+            slot.TryEmptySlot();
         }
 
         public virtual IEnumerable<Gizmo> EquippedGizmos()
@@ -351,19 +358,31 @@ namespace CompSlotLoadable
                 }
                 if (((SlotLoadableDef)slot.def).doesChangeStats)
                 {
-                    
-                    if (slot.SlotOccupant.def.statBases != null && slot.SlotOccupant.def.statBases.Count > 0)
+                    CompSlottedBonus slotBonus = slot.SlotOccupant.TryGetComp<CompSlottedBonus>();
+                    if (slotBonus != null)
                     {
-                        List<StatModifier> statMods = slot.SlotOccupant.def.statBases.FindAll(
-                            (StatModifier z) => z.stat.category == StatCategoryDefOf.Weapon ||
-                                                z.stat.category == StatCategoryDefOf.EquippedStatOffsets);
-                        if (statMods != null && statMods.Count > 0)
+                        if (slotBonus.Props != null)
                         {
-                            s.AppendLine();
-                            s.AppendLine("StatModifiers".Translate() + ":");
-                            foreach (StatModifier mod in statMods)
+                            if (slotBonus.Props.statModifiers != null && slotBonus.Props.statModifiers.Count > 0)
                             {
-                                s.AppendLine("\t" + mod.stat.LabelCap + " " + mod.ToStringAsOffset);
+                                List<StatModifier> statMods = slot.SlotOccupant.def.statBases.FindAll(
+                                    (StatModifier z) => z.stat.category == StatCategoryDefOf.Weapon ||
+                                                        z.stat.category == StatCategoryDefOf.EquippedStatOffsets);
+                                if (statMods != null && statMods.Count > 0)
+                                {
+                                    s.AppendLine();
+                                    s.AppendLine("StatModifiers".Translate() + ":");
+                                    foreach (StatModifier mod in statMods)
+                                    {
+                                        s.AppendLine("\t" + mod.stat.LabelCap + " " + mod.ToStringAsOffset);
+                                    }
+                                }
+                            }
+                            DamageDef damageDef = slotBonus.Props.damageDef;
+                            if (damageDef != null)
+                            {
+                                s.AppendLine();
+                                s.AppendLine("DamageType".Translate() + ": " + damageDef.LabelCap);
                             }
                         }
                     }

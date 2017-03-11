@@ -19,9 +19,10 @@ namespace CompSlotLoadable
             HarmonyInstance harmony = HarmonyInstance.Create("rimworld.jecrell.comps.slotloadable");
 
             harmony.Patch(AccessTools.Method(typeof(Pawn), "GetGizmos"), null, new HarmonyMethod(typeof(HarmonyCompSlotLoadable).GetMethod("GetGizmosPrefix")));
-            harmony.Patch(AccessTools.Method(typeof(Thing), "get_Graphic"), null, new HarmonyMethod(typeof(HarmonyCompSlotLoadable).GetMethod("get_Graphic_PostFix")));
+            //harmony.Patch(AccessTools.Method(typeof(Thing), "get_Graphic"), null, new HarmonyMethod(typeof(HarmonyCompSlotLoadable).GetMethod("get_Graphic_PostFix")));
             harmony.Patch(AccessTools.Method(typeof(StatExtension), "GetStatValue"), null, new HarmonyMethod(typeof(HarmonyCompSlotLoadable).GetMethod("GetValue_PostFix")));
             harmony.Patch(AccessTools.Method(typeof(FloatMenuMakerMap), "AddHumanlikeOrders"), null, new HarmonyMethod(typeof(HarmonyCompSlotLoadable).GetMethod("AddHumanlikeOrders_PostFix")));
+            harmony.Patch(AccessTools.Method(typeof(Verb_MeleeAttack), "DamageInfosToApply"), null, new HarmonyMethod(typeof(HarmonyCompSlotLoadable).GetMethod("DamageInfosToApply_PostFix")), null);
 
 
             //Color postfixes
@@ -31,7 +32,131 @@ namespace CompSlotLoadable
 
 
 
-        //=================================== COMPACTIVATABLE
+        //=================================== COMPSLOTLOADABLE
+
+        public static void NewDamageInfosToApply()
+        {
+
+        }
+
+        // RimWorld.Verb_MeleeAttack
+        public static void DamageInfosToApply_PostFix(Verb_MeleeAttack __instance, ref IEnumerable<DamageInfo> __result, LocalTargetInfo target)
+        {
+            List<DamageInfo> newList = new List<DamageInfo>();
+            //__result = null;
+            ThingWithComps ownerEquipment = __instance.ownerEquipment;
+            if (ownerEquipment != null)
+            {
+
+                //Log.Message("1");
+                ThingComp comp = ownerEquipment.AllComps.FirstOrDefault((ThingComp x) => x is CompSlotLoadable);
+                if (comp != null)
+                {
+
+                    //Log.Message("2");
+                    CompSlotLoadable compSlotLoadable = comp as CompSlotLoadable;
+                    if (compSlotLoadable.Slots != null && compSlotLoadable.Slots.Count > 0)
+                    {
+
+                        //Log.Message("3");
+                        List<SlotLoadable> statSlots = compSlotLoadable.Slots.FindAll((SlotLoadable z) => !z.IsEmpty() && ((SlotLoadableDef)z.def).doesChangeStats == true);
+                        if (statSlots != null && statSlots.Count > 0)
+                        {
+
+                            //Log.Message("4");
+                            foreach (SlotLoadable slot in statSlots)
+                            {
+
+                                //Log.Message("5");
+                                CompSlottedBonus slotBonus = slot.SlotOccupant.TryGetComp<CompSlottedBonus>();
+                                if (slotBonus != null)
+                                {
+
+                                    //Log.Message("6");
+                                    Type superClass = __instance.GetType().BaseType;
+                                    if (slotBonus.Props.damageDef != null)
+                                    {
+
+                                        //Log.Message("7");
+                                        float num = (float)__instance.verbProps.AdjustedMeleeDamageAmount(__instance, __instance.CasterPawn, __instance.ownerEquipment);
+                                        DamageDef def = __instance.verbProps.meleeDamageDef;
+                                        BodyPartGroupDef weaponBodyPartGroup = null;
+                                        HediffDef weaponHediff = null;
+                                        if (__instance.CasterIsPawn)
+                                        {
+
+                                            //Log.Message("8");
+                                            if (num >= 1f)
+                                            {
+                                                weaponBodyPartGroup = __instance.verbProps.linkedBodyPartsGroup;
+                                                if (__instance.ownerHediffComp != null)
+                                                {
+                                                    weaponHediff = __instance.ownerHediffComp.Def;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                num = 1f;
+                                                def = DamageDefOf.Blunt;
+                                            }
+                                        }
+
+                                        //Log.Message("9");
+                                        ThingDef def2;
+                                        if (__instance.ownerEquipment != null)
+                                        {
+                                            def2 = __instance.ownerEquipment.def;
+                                        }
+                                        else
+                                        {
+                                            def2 = __instance.CasterPawn.def;
+                                        }
+
+                                        //Log.Message("10");
+                                        Vector3 angle = (target.Thing.Position - __instance.CasterPawn.Position).ToVector3();
+
+                                        //Log.Message("11");
+                                        Thing caster = __instance.caster;
+
+                                        //Log.Message("12");
+                                        DamageInfo damageInfo = new DamageInfo(slotBonus.Props.damageDef, GenMath.RoundRandom(num), -1f, caster, null, def2);
+                                        damageInfo.SetBodyRegion(BodyPartHeight.Undefined, BodyPartDepth.Outside);
+                                        damageInfo.SetWeaponBodyPartGroup(weaponBodyPartGroup);
+                                        damageInfo.SetWeaponHediff(weaponHediff);
+                                        damageInfo.SetAngle(angle);
+
+                                        //Log.Message("13");
+                                        newList.Add(damageInfo);
+
+                                        __result = newList.AsEnumerable<DamageInfo>();
+                                        //Log.Message("14");
+                                        //bool surpriseAttack = (bool)AccessTools.Field(typeof(Verb_MeleeAttack), "surpriseAttack").GetValue(__instance);
+                                        //if (surpriseAttack && __instance.verbProps.surpriseAttack != null && __instance.verbProps.surpriseAttack.extraMeleeDamages != null)
+                                        //{
+                                        //    List<ExtraMeleeDamage> extraMeleeDamages = __instance.verbProps.surpriseAttack.extraMeleeDamages;
+                                        //    for (int i = 0; i < extraMeleeDamages.Count; i++)
+                                        //    {
+                                        //        ExtraMeleeDamage extraMeleeDamage = extraMeleeDamages[i];
+                                        //        int amount = GenMath.RoundRandom((float)extraMeleeDamage.amount * __instance.GetDamageFactorFor(__instance.CasterPawn));
+                                        //        caster = __instance.caster;
+                                        //        DamageInfo damageInfo2 = new DamageInfo(extraMeleeDamage.def, amount, -1f, caster, null, def2);
+                                        //        damageInfo2.SetBodyRegion(BodyPartHeight.Undefined, BodyPartDepth.Outside);
+                                        //        damageInfo2.SetWeaponBodyPartGroup(weaponBodyPartGroup);
+                                        //        damageInfo2.SetWeaponHediff(weaponHediff);
+                                        //        damageInfo2.SetAngle(angle);
+                                        //        __result.Add(damageInfo2);
+                                        //    }
+                                        //}
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
 
         public static void AddHumanlikeOrders_PostFix(Vector3 clickPos, Pawn pawn, List<FloatMenuOption> opts)
         {
@@ -120,14 +245,24 @@ namespace CompSlotLoadable
                         {
                             foreach (SlotLoadable slot in statSlots)
                             {
-                                StatModifier thisStat = slot.SlotOccupant.def.statBases.FirstOrDefault(
-                                    (StatModifier y) => y.stat == stat &&
-                                    (y.stat.category == StatCategoryDefOf.Weapon ||
-                                    y.stat.category == StatCategoryDefOf.EquippedStatOffsets
-                                    ));
-                                if (thisStat != null)
+                                CompSlottedBonus slotBonus = slot.SlotOccupant.TryGetComp<CompSlottedBonus>();
+                                if (slotBonus != null)
                                 {
-                                    __result += thisStat.value;
+                                    if (slotBonus.Props != null)
+                                    {
+                                        if (slotBonus.Props.statModifiers != null && slotBonus.Props.statModifiers.Count > 0)
+                                        {
+                                            StatModifier thisStat = slotBonus.Props.statModifiers.FirstOrDefault(
+                                                (StatModifier y) => y.stat == stat &&
+                                                (y.stat.category == StatCategoryDefOf.Weapon ||
+                                                y.stat.category == StatCategoryDefOf.EquippedStatOffsets
+                                                ));
+                                            if (thisStat != null)
+                                            {
+                                                __result += thisStat.value;
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -153,21 +288,26 @@ namespace CompSlotLoadable
                     {
                         if (!slot.IsEmpty())
                         {
-                            //if (activatableEffect != null)
-                            //{
-                            //    AccessTools.Field(activatableEffect.GetType(), "overrideColor").SetValue(activatableEffect, slot.SlotOccupant.DrawColor);
-                            //    Log.ErrorOnce("GraphicPostFix_Called_Activatable", 1866);
-                            //}
-                            //else
-                            //{
+                            CompSlottedBonus slotBonus = slot.SlotOccupant.TryGetComp<CompSlottedBonus>();
+                            if (slotBonus != null)
+                            {
+                                //if (activatableEffect != null)
+                                //{
+                                //    AccessTools.Field(activatableEffect.GetType(), "overrideColor").SetValue(activatableEffect, slot.SlotOccupant.DrawColor);
+                                //    Log.ErrorOnce("GraphicPostFix_Called_Activatable", 1866);
+                                //}
+                                //else
+                                //{
                                 Graphic tempGraphic = (Graphic)AccessTools.Field(typeof(Thing), "graphicInt").GetValue(__instance);
                                 if (tempGraphic != null)
-                            {
-                                if (tempGraphic.Shader != null)
                                 {
-                                    tempGraphic = tempGraphic.GetColoredVersion(tempGraphic.Shader, slot.SlotOccupant.DrawColor, slot.SlotOccupant.DrawColor); //slot.SlotOccupant.DrawColor;
-                                    __result = tempGraphic;
+                                    if (tempGraphic.Shader != null)
+                                    {
+                                        tempGraphic = tempGraphic.GetColoredVersion(tempGraphic.Shader, slotBonus.Props.color, slotBonus.Props.color); //slot.SlotOccupant.DrawColor;
+                                        __result = tempGraphic;
+                                        //Log.Message("SlotLoadableDraw");
 
+                                    }
                                 }
                             }
                             //Log.ErrorOnce("GraphicPostFix_Called_5", 1866);

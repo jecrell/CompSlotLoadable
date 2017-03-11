@@ -18,7 +18,7 @@ namespace CompSlotLoadable
 
         //Settable variables
         public List<ThingDef> slottableThingDefs;
-
+        //
         //Spawn variables
         public Thing owner;
 
@@ -122,6 +122,21 @@ namespace CompSlotLoadable
             {
                 return slotOccupant;
             }
+            set
+            {
+                slotOccupant = value;
+            }
+        }
+        public ThingContainer Slot
+        {
+            get
+            {
+                return slot;
+            }
+            set
+            {
+                slot = value;
+            }
         }
 
         public Pawn ParentHolder
@@ -201,9 +216,9 @@ namespace CompSlotLoadable
 
         #region Methods
 
-        public bool TryLoadSlot(Thing thingToLoad, bool emptyIfFilled = false)
+        public virtual bool TryLoadSlot(Thing thingToLoad, bool emptyIfFilled = false)
         {
-            Log.Message("TryLoadSlot Called");
+            //Log.Message("TryLoadSlot Called");
             if ((slotOccupant != null && emptyIfFilled) || slotOccupant == null)
             {
                 TryEmptySlot();
@@ -233,12 +248,18 @@ namespace CompSlotLoadable
             return false;
         }
 
-        public bool TryEmptySlot()
+        public virtual bool TryEmptySlot()
         {
+            if (!CanEmptySlot()) return false;
             if (slot.TryDropAll(ParentLoc, ParentMap, ThingPlaceMode.Near))
             {
                 slotOccupant = null;
             }
+            return true;
+        }
+
+        public virtual bool CanEmptySlot()
+        {
             return true;
         }
 
