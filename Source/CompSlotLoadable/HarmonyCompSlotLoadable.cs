@@ -8,6 +8,7 @@ using Verse;
 using Verse.AI;
 using System.Reflection;
 using UnityEngine;
+using Verse.Sound;
 
 namespace CompSlotLoadable
 {
@@ -23,6 +24,7 @@ namespace CompSlotLoadable
             harmony.Patch(AccessTools.Method(typeof(StatExtension), "GetStatValue"), null, new HarmonyMethod(typeof(HarmonyCompSlotLoadable).GetMethod("GetValue_PostFix")));
             harmony.Patch(AccessTools.Method(typeof(FloatMenuMakerMap), "AddHumanlikeOrders"), null, new HarmonyMethod(typeof(HarmonyCompSlotLoadable).GetMethod("AddHumanlikeOrders_PostFix")));
             harmony.Patch(AccessTools.Method(typeof(Verb_MeleeAttack), "DamageInfosToApply"), null, new HarmonyMethod(typeof(HarmonyCompSlotLoadable).GetMethod("DamageInfosToApply_PostFix")), null);
+            harmony.Patch(AccessTools.Method(typeof(ITab_Pawn_Gear), "DrawThingRow"), null, new HarmonyMethod(typeof(HarmonyCompSlotLoadable).GetMethod("DrawThingRow_PostFix")), null);
 
 
             //Color postfixes
@@ -31,13 +33,53 @@ namespace CompSlotLoadable
         }
 
 
+        private static readonly Color HighlightColor = new Color(0.5f, 0.5f, 0.5f, 1f);
 
+        private static readonly Color ThingLabelColor = new Color(0.9f, 0.9f, 0.9f, 1f);
         //=================================== COMPSLOTLOADABLE
 
-        public static void NewDamageInfosToApply()
+        public static void DrawThingRow_PostFix(ITab_Pawn_Gear __instance, ref float y, float width, Thing thing, bool showDropButtonIfPrisoner = false)
         {
-
+            //Log.Message("1");
+            ThingWithComps thingWithComps = thing as ThingWithComps;
+            if (thingWithComps != null)
+            {
+                ThingComp comp = thingWithComps.AllComps.FirstOrDefault((ThingComp x) => x is CompSlotLoadable);
+                if (comp != null)
+                {
+                    CompSlotLoadable compSlotLoadable = comp as CompSlotLoadable;
+                    if (compSlotLoadable.Slots != null && compSlotLoadable.Slots.Count > 0)
+                    {
+                        foreach (SlotLoadable slot in compSlotLoadable.Slots)
+                        {
+                            if (!slot.IsEmpty())
+                            {
+                                Rect rect = new Rect(0f, y, width, 28f);
+                                Widgets.InfoCardButton(rect.width - 24f, y, slot.SlotOccupant);
+                                rect.width -= 24f;
+                                //bool CanControl = (bool)AccessTools.Method(typeof(ITab_Pawn_Gear), "get_CanControl").Invoke(__instance, null);
+                                if (Mouse.IsOver(rect))
+                                {
+                                    GUI.color = HarmonyCompSlotLoadable.HighlightColor;
+                                    GUI.DrawTexture(rect, TexUI.HighlightTex);
+                                }
+                                if (slot.SlotOccupant.def.DrawMatSingle != null && slot.SlotOccupant.def.DrawMatSingle.mainTexture != null)
+                                {
+                                    Widgets.ThingIcon(new Rect(4f, y, 28f, 28f), slot.SlotOccupant, 1f);
+                                }
+                                Text.Anchor = TextAnchor.MiddleLeft;
+                                GUI.color = HarmonyCompSlotLoadable.ThingLabelColor;
+                                Rect rect4 = new Rect(36f, y, width - 36f, 28f);
+                                string text = slot.SlotOccupant.LabelCap;
+                                Widgets.Label(rect4, text);
+                                y += 28f;
+                            }
+                        }
+                    }
+                }
+            }
         }
+
 
         // RimWorld.Verb_MeleeAttack
         public static void DamageInfosToApply_PostFix(Verb_MeleeAttack __instance, ref IEnumerable<DamageInfo> __result, LocalTargetInfo target)
