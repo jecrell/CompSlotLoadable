@@ -25,13 +25,107 @@ namespace CompSlotLoadable
             harmony.Patch(AccessTools.Method(typeof(FloatMenuMakerMap), "AddHumanlikeOrders"), null, new HarmonyMethod(typeof(HarmonyCompSlotLoadable).GetMethod("AddHumanlikeOrders_PostFix")));
             harmony.Patch(AccessTools.Method(typeof(Verb_MeleeAttack), "DamageInfosToApply"), null, new HarmonyMethod(typeof(HarmonyCompSlotLoadable).GetMethod("DamageInfosToApply_PostFix")), null);
             harmony.Patch(AccessTools.Method(typeof(ITab_Pawn_Gear), "DrawThingRow"), null, new HarmonyMethod(typeof(HarmonyCompSlotLoadable).GetMethod("DrawThingRow_PostFix")), null);
-
+            harmony.Patch(AccessTools.Method(typeof(Pawn), "PostApplyDamage"), null, new HarmonyMethod(typeof(HarmonyCompSlotLoadable).GetMethod("PostApplyDamage_PostFix")), null);
 
             //Color postfixes
             //harmony.Patch(typeof(ThingWithComps).GetMethod("get_DrawColor"), null, new HarmonyMethod(typeof(HarmonyCompSlotLoadable).GetMethod("DrawColorPostFix")));
             //harmony.Patch(typeof(Thing).GetMethod("get_DrawColorTwo"), null, new HarmonyMethod(typeof(HarmonyCompSlotLoadable).GetMethod("DrawColorTwoPostFix")));
         }
 
+        /// <summary>
+        /// Applies the special properties to the slot loadable.
+        /// </summary>
+        /// <param name="__instance"></param>
+        /// <param name="dinfo"></param>
+        /// <param name="totalDamageDealt"></param>
+        public static void PostApplyDamage_PostFix(Pawn __instance, DamageInfo dinfo, float totalDamageDealt)
+        {
+            if (__instance == null) return;
+            if (__instance.Dead || __instance.equipment == null) return;
+            ThingWithComps thingWithComps = __instance.equipment.Primary;
+            if (thingWithComps != null)
+            {
+                ThingComp comp = thingWithComps.AllComps.FirstOrDefault((ThingComp x) => x is CompSlotLoadable);
+                if (comp != null)
+                {
+                    CompSlotLoadable compSlotLoadable = comp as CompSlotLoadable;
+                    if (compSlotLoadable.Slots != null && compSlotLoadable.Slots.Count > 0)
+                    {
+                        foreach (SlotLoadable slot in compSlotLoadable.Slots)
+                        {
+                            if (!slot.IsEmpty())
+                            {
+                                CompSlottedBonus slotBonus = slot.SlotOccupant.TryGetComp<CompSlottedBonus>();
+                                if (slotBonus != null)
+                                {
+                                    if (slotBonus.Props != null)
+                                    {
+                                        SlotBonusProps_DefensiveHealChance defensiveHealChance = slotBonus.Props.defensiveHealChance;
+                                        if (defensiveHealChance != null)
+                                        {
+                                            //Log.Message("defensiveHealingCalled");
+                                            float randValue = Rand.Value;
+                                            //Log.Message("randValue = " + randValue.ToString());
+                                            if (randValue <= defensiveHealChance.chance)
+                                            {
+                                                MoteMaker.ThrowText(__instance.DrawPos, __instance.Map, "Heal Chance: Success", 6f);
+                                                ApplyHealing(__instance, defensiveHealChance.woundLimit);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void ApplyHealing(Thing thing, int woundLimit = 0, Thing vampiricTarget = null)
+        {
+            Pawn pawn = thing as Pawn;
+            if (pawn != null)
+            {
+                int maxInjuries = woundLimit;
+                
+                foreach (BodyPartRecord rec in pawn.health.hediffSet.GetInjuredParts())
+                {
+                    if (maxInjuries > 0 || woundLimit == 0)
+                    {
+                        //maxInjuriesPerBodypart = 2;
+                        foreach (Hediff_Injury current in from injury in pawn.health.hediffSet.GetHediffs<Hediff_Injury>() where injury.Part == rec select injury)
+                        {
+                            //if (maxInjuriesPerBodypart > 0)
+                            //{
+                                if (current.CanHealNaturally() && !current.IsOld()) // basically check for scars and old wounds
+                                {
+                                    current.Heal((int)current.Severity + 1);
+                                    maxInjuries--;
+                                    //maxInjuriesPerBodypart--;
+                                }
+                            //}
+                        }
+                    }
+                }
+
+                //
+                if (vampiricTarget != null)
+                {
+                    int maxInjuriesToMake = woundLimit;
+                    if (woundLimit == 0) maxInjuriesToMake = 2;
+
+                    Pawn vampiricPawn = vampiricTarget as Pawn;
+                    foreach (BodyPartRecord rec in vampiricPawn.health.hediffSet.GetNotMissingParts().InRandomOrder<BodyPartRecord>())
+                    {
+                        if (maxInjuriesToMake > 0)
+                        {
+                            vampiricPawn.TakeDamage(new DamageInfo(DamageDefOf.Burn, new IntRange(5, 10).RandomInRange, -1, vampiricPawn, rec));
+                            maxInjuriesToMake--;
+                        }
+                    }
+                }
+            }
+        }
 
         private static readonly Color HighlightColor = new Color(0.5f, 0.5f, 0.5f, 1f);
 
@@ -171,25 +265,21 @@ namespace CompSlotLoadable
                                         newList.Add(damageInfo);
 
                                         __result = newList.AsEnumerable<DamageInfo>();
-                                        //Log.Message("14");
-                                        //bool surpriseAttack = (bool)AccessTools.Field(typeof(Verb_MeleeAttack), "surpriseAttack").GetValue(__instance);
-                                        //if (surpriseAttack && __instance.verbProps.surpriseAttack != null && __instance.verbProps.surpriseAttack.extraMeleeDamages != null)
-                                        //{
-                                        //    List<ExtraMeleeDamage> extraMeleeDamages = __instance.verbProps.surpriseAttack.extraMeleeDamages;
-                                        //    for (int i = 0; i < extraMeleeDamages.Count; i++)
-                                        //    {
-                                        //        ExtraMeleeDamage extraMeleeDamage = extraMeleeDamages[i];
-                                        //        int amount = GenMath.RoundRandom((float)extraMeleeDamage.amount * __instance.GetDamageFactorFor(__instance.CasterPawn));
-                                        //        caster = __instance.caster;
-                                        //        DamageInfo damageInfo2 = new DamageInfo(extraMeleeDamage.def, amount, -1f, caster, null, def2);
-                                        //        damageInfo2.SetBodyRegion(BodyPartHeight.Undefined, BodyPartDepth.Outside);
-                                        //        damageInfo2.SetWeaponBodyPartGroup(weaponBodyPartGroup);
-                                        //        damageInfo2.SetWeaponHediff(weaponHediff);
-                                        //        damageInfo2.SetAngle(angle);
-                                        //        __result.Add(damageInfo2);
-                                        //    }
-                                        //}
-                                        return;
+                                    }
+                                    SlotBonusProps_VampiricEffect vampiricEffect = slotBonus.Props.vampiricHealChance;
+                                    if (vampiricEffect != null)
+                                    {
+
+                                        //Log.Message("vampiricHealingCalled");
+                                        float randValue = Rand.Value;
+                                        //Log.Message("randValue = " + randValue.ToString());
+                                        
+                                        if (randValue <= vampiricEffect.chance)
+                                        {
+                                            MoteMaker.ThrowText(__instance.CasterPawn.DrawPos, __instance.CasterPawn.Map, "Vampiric Effect: Success", 6f);
+                                            //MoteMaker.ThrowText(__instance.CasterPawn.DrawPos, __instance.CasterPawn.Map, "Success".Translate(), 6f);
+                                            ApplyHealing(__instance.caster, vampiricEffect.woundLimit, target.Thing);
+                                        }
                                     }
                                 }
                             }

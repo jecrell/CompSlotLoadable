@@ -14,6 +14,10 @@ namespace CompSlotLoadable
 
         public Color color = Color.white;
 
+        public SlotBonusProps_DefensiveHealChance defensiveHealChance = null;
+
+        public SlotBonusProps_VampiricEffect vampiricHealChance = null;
+
         public CompProperties_SlottedBonus()
         {
             this.compClass = typeof(CompSlottedBonus);

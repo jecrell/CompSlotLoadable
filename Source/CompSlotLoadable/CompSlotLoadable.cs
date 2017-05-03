@@ -384,6 +384,28 @@ namespace CompSlotLoadable
                                 s.AppendLine();
                                 s.AppendLine("DamageType".Translate() + ": " + damageDef.LabelCap);
                             }
+                            SlotBonusProps_DefensiveHealChance defHealChance = slotBonus.Props.defensiveHealChance;
+                            if (defHealChance != null)
+                            {
+                                string healText = "all";
+                                if (defHealChance.woundLimit != 0) healText = defHealChance.woundLimit.ToString();
+                                s.AppendLine("\t" + "DefensiveHealChance".Translate(new object[]
+                                    {
+                                        healText,
+                                        defHealChance.chance.ToStringPercent()
+                                    }));
+                            }
+                            SlotBonusProps_VampiricEffect vampChance = slotBonus.Props.vampiricHealChance;
+                            if (vampChance != null)
+                            {
+                                string vampText = "all";
+                                if (vampChance.woundLimit != 0) vampText = defHealChance.woundLimit.ToString();
+                                s.AppendLine("\t" + "VampiricChance".Translate(new object[]
+                                    {
+                                        vampText,
+                                        vampChance.chance.ToStringPercent()
+                                    }));
+                            }
                         }
                     }
 

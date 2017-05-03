@@ -88,7 +88,7 @@ namespace CompSlotLoadable
                 {
                     if (this.slottableThingDefs.Contains(defType))
                     {
-                        Log.Message("Can Load: " + defType.ToString());
+                        //Log.Message("Can Load: " + defType.ToString());
                         return true;
                     }
                 }
