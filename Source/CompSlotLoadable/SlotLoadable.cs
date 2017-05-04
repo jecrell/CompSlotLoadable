@@ -13,7 +13,7 @@ namespace CompSlotLoadable
         #region Variables
 
         //Exposable Variables
-        private Thing slotOccupant;
+        //private Thing slotOccupant;
         private ThingOwner slot;
 
         //Settable variables
@@ -52,11 +52,11 @@ namespace CompSlotLoadable
 
         public Texture2D SlotIcon()
         {
-            if (slotOccupant != null)
+            if (SlotOccupant != null)
             {
-                if (slotOccupant.def != null)
+                if (SlotOccupant.def != null)
                 {
-                    return slotOccupant.def.uiIcon;
+                    return SlotOccupant.def.uiIcon;
                 }
             }
             return null;
@@ -64,11 +64,11 @@ namespace CompSlotLoadable
 
         public Color SlotColor()
         {
-            if (slotOccupant != null)
+            if (SlotOccupant != null)
             {
-                if (slotOccupant.def != null)
+                if (SlotOccupant.def != null)
                 {
-                    return slotOccupant.def.graphic.Color;
+                    return SlotOccupant.def.graphic.Color;
                 }
             }
             return Color.white;
@@ -76,7 +76,7 @@ namespace CompSlotLoadable
 
         public bool IsEmpty()
         {
-            if (slotOccupant != null) return false;
+            if (SlotOccupant != null) return false;
             return true;
         }
 
@@ -127,16 +127,45 @@ namespace CompSlotLoadable
 
         #region Properties
         //Get methods
+
+
+
         public Thing SlotOccupant
         {
             get
             {
-                return slotOccupant;
+                if (this.slot.Count == 0)
+                {
+                    return null;
+                }
+                if (this.slot.Count > 1)
+                {
+                    Log.Error("ContainedThing used on a DropPodInfo holding > 1 thing.");
+                }
+                return this.slot[0];
             }
             set
             {
-                slotOccupant = value;
+                this.slot.Clear();
+                if (value.holdingOwner != null) {
+                    Thing takenThing = value.holdingOwner.Take(value, 1);
+                    value.DeSpawn();
+                    this.slot.TryAdd(takenThing, true);
+                }
+                else
+                {
+                    this.slot.TryAdd(value, true);
+                }
             }
+
+            //get
+            //{
+            //    return slotOccupant;
+            //}
+            //set
+            //{
+            //    slotOccupant = value;
+            //}
         }
         public ThingOwner Slot
         {
@@ -230,7 +259,7 @@ namespace CompSlotLoadable
         public virtual bool TryLoadSlot(Thing thingToLoad, bool emptyIfFilled = false)
         {
             //Log.Message("TryLoadSlot Called");
-            if ((slotOccupant != null && emptyIfFilled) || slotOccupant == null)
+            if ((SlotOccupant != null && emptyIfFilled) || SlotOccupant == null)
             {
                 TryEmptySlot();
                 if (thingToLoad != null)
@@ -239,8 +268,8 @@ namespace CompSlotLoadable
                     {
                         if (slottableThingDefs.Contains(thingToLoad.def))
                         {
-                            slotOccupant = thingToLoad;
-                            slot.TryAdd(thingToLoad, false);
+                            SlotOccupant = thingToLoad;
+                            //slot.TryAdd(thingToLoad, false);
                             if (((SlotLoadableDef)def).doesChangeColor)
                             {
                                 owner.Notify_ColorChanged();
@@ -262,11 +291,7 @@ namespace CompSlotLoadable
         public virtual bool TryEmptySlot()
         {
             if (!CanEmptySlot()) return false;
-            if (slot.TryDropAll(ParentLoc, ParentMap, ThingPlaceMode.Near))
-            {
-                slotOccupant = null;
-            }
-            return true;
+            return slot.TryDropAll(ParentLoc, ParentMap, ThingPlaceMode.Near);
         }
 
         public virtual bool CanEmptySlot()
@@ -293,7 +318,7 @@ namespace CompSlotLoadable
             });
             Scribe_Collections.Look<ThingDef>(ref this.slottableThingDefs, "slottableThingDefs", LookMode.Undefined, new object[0]);
             Scribe_References.Look<Thing>(ref this.owner, "owner");
-            Scribe_References.Look<Thing>(ref this.slotOccupant, "slotOccupant");
+            //Scribe_References.Look<Thing>(ref this.slotOccupant, "slotOccupant");
         }
     }
 }

@@ -519,7 +519,7 @@ namespace CompSlotLoadable
             if (pawn_EquipmentTracker != null)
             {
                 //Log.Message("2");
-                ThingWithComps thingWithComps = (ThingWithComps)AccessTools.Field(typeof(Pawn_EquipmentTracker), "primaryInt").GetValue(pawn_EquipmentTracker);
+                ThingWithComps thingWithComps = pawn_EquipmentTracker.Primary; //(ThingWithComps)AccessTools.Field(typeof(Pawn_EquipmentTracker), "primaryInt").GetValue(pawn_EquipmentTracker);
 
                 if (thingWithComps != null)
                 {
