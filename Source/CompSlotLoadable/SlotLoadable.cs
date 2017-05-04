@@ -8,13 +8,13 @@ using UnityEngine;
 
 namespace CompSlotLoadable
 {
-    public class SlotLoadable : Thing, IThingContainerOwner
+    public class SlotLoadable : Thing, IThingHolder
     {
         #region Variables
 
         //Exposable Variables
         private Thing slotOccupant;
-        private ThingContainer slot;
+        private ThingOwner slot;
 
         //Settable variables
         public List<ThingDef> slottableThingDefs;
@@ -37,7 +37,7 @@ namespace CompSlotLoadable
             this.slottableThingDefs = def.slottableThingDefs;
             owner = newOwner;
             ThingIDMaker.GiveIDTo(this);
-            slot = new ThingContainer(this, false, LookMode.Deep);
+            slot = new ThingOwner<Thing>(this, false, LookMode.Deep);
         }
 
         public SlotLoadable(SlotLoadableDef xmlDef, Thing newOwner)
@@ -47,7 +47,7 @@ namespace CompSlotLoadable
             this.slottableThingDefs = xmlDef.slottableThingDefs;
             owner = newOwner;
             ThingIDMaker.GiveIDTo(this);
-            slot = new ThingContainer(this, false, LookMode.Deep);
+            slot = new ThingOwner<Thing>(this, false, LookMode.Deep);
         }
 
         public Texture2D SlotIcon()
@@ -96,14 +96,14 @@ namespace CompSlotLoadable
             return false;
         }
 
-        #region IThingContainerOwner
+        #region IThingOwnerOwner
 
         public Map GetMap()
         {
             return ParentMap;
         }
 
-        public ThingContainer GetInnerContainer()
+        public ThingOwner GetInnerContainer()
         {
             return slot;
         }
@@ -112,7 +112,18 @@ namespace CompSlotLoadable
         {
             return ParentLoc;
         }
-        #endregion IThingContainerOwner
+
+        public void GetChildHolders(List<IThingHolder> outChildren)
+        {
+            ThingOwnerUtility.AppendThingHoldersFromThings(outChildren, this.GetDirectlyHeldThings());
+        }
+
+        public ThingOwner GetDirectlyHeldThings()
+        {
+            return this.slot;
+        }
+
+        #endregion IThingOwnerOwner
 
         #region Properties
         //Get methods
@@ -127,7 +138,7 @@ namespace CompSlotLoadable
                 slotOccupant = value;
             }
         }
-        public ThingContainer Slot
+        public ThingOwner Slot
         {
             get
             {
@@ -139,7 +150,7 @@ namespace CompSlotLoadable
             }
         }
 
-        public Pawn ParentHolder
+        public Pawn Holder
         {
             get
             {
@@ -175,9 +186,9 @@ namespace CompSlotLoadable
                 //Use that to find a pawn location if it's equipped.
                 if (owner != null)
                 {
-                    if (ParentHolder != null)
+                    if (Holder != null)
                     {
-                        return ParentHolder.Map;
+                        return Holder.Map;
                     }
                     return owner.Map;
                 }
@@ -194,9 +205,9 @@ namespace CompSlotLoadable
                 //Use that to find a pawn location if it's equipped.
                 if (owner != null)
                 {
-                    if (ParentHolder != null)
+                    if (Holder != null)
                     {
-                        return ParentHolder.Position;
+                        return Holder.Position;
                     }
                     return owner.Position;
                 }
@@ -276,13 +287,13 @@ namespace CompSlotLoadable
                     ThingIDMaker.GiveIDTo(this);
                 }
             }
-            Scribe_Deep.LookDeep<ThingContainer>(ref this.slot, "slot", new object[]
+            Scribe_Deep.Look<ThingOwner>(ref this.slot, "slot", new object[]
             {
                 this
             });
-            Scribe_Collections.LookList<ThingDef>(ref this.slottableThingDefs, "slottableThingDefs", LookMode.Undefined, new object[0]);
-            Scribe_References.LookReference<Thing>(ref this.owner, "owner");
-            Scribe_References.LookReference<Thing>(ref this.slotOccupant, "slotOccupant");
+            Scribe_Collections.Look<ThingDef>(ref this.slottableThingDefs, "slottableThingDefs", LookMode.Undefined, new object[0]);
+            Scribe_References.Look<Thing>(ref this.owner, "owner");
+            Scribe_References.Look<Thing>(ref this.slotOccupant, "slotOccupant");
         }
     }
 }

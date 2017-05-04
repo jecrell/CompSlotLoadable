@@ -172,8 +172,9 @@ namespace CompSlotLoadable
 
                     Job job = new Job(CompSlotLoadableDefOf.GatherSlotItem, itemToLoad);
                     job.count = 1;
-                    GetPawn.QueueJob(job);
-                    GetPawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
+                    GetPawn.jobs.TryTakeOrderedJob(job);
+                    //GetPawn.jobs.jobQueue.EnqueueFirst(job);
+                    //GetPawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
                 }
                 else Messages.Message("IsDrafted".Translate(new object[]
                     {
@@ -416,9 +417,9 @@ namespace CompSlotLoadable
 
         public override void PostExposeData()
         {
-            Scribe_Values.LookValue<bool>(ref this.isInitialized, "isInitialized", false);
-            Scribe_Values.LookValue<bool>(ref this.isGathering, "isGathering", false);
-            Scribe_Collections.LookList<SlotLoadable>(ref this.slots, "slots", LookMode.Deep, new object[0]);
+            Scribe_Values.Look<bool>(ref this.isInitialized, "isInitialized", false);
+            Scribe_Values.Look<bool>(ref this.isGathering, "isGathering", false);
+            Scribe_Collections.Look<SlotLoadable>(ref this.slots, "slots", LookMode.Deep, new object[0]);
             base.PostExposeData();
             if (slots == null)
             {

@@ -174,7 +174,6 @@ namespace CompSlotLoadable
             }
         }
 
-
         // RimWorld.Verb_MeleeAttack
         public static void DamageInfosToApply_PostFix(Verb_MeleeAttack __instance, ref IEnumerable<DamageInfo> __result, LocalTargetInfo target)
         {
@@ -289,12 +288,11 @@ namespace CompSlotLoadable
             }
         }
 
-
         public static void AddHumanlikeOrders_PostFix(Vector3 clickPos, Pawn pawn, List<FloatMenuOption> opts)
         {
             IntVec3 c = IntVec3.FromVector3(clickPos);
 
-            ThingWithComps slotLoadable = pawn.equipment.AllEquipment.FirstOrDefault((ThingWithComps x) => x.TryGetComp<CompSlotLoadable>() != null);
+            ThingWithComps slotLoadable = pawn.equipment.AllEquipmentListForReading.FirstOrDefault((ThingWithComps x) => x.TryGetComp<CompSlotLoadable>() != null);
             if (slotLoadable != null)
             {
                 CompSlotLoadable compSlotLoadable = slotLoadable.GetComp<CompSlotLoadable>();
