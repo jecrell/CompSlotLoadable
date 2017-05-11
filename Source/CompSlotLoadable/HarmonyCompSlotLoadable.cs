@@ -328,7 +328,7 @@ namespace CompSlotLoadable
                     labelShort
                                 }) + " (" + "ReservedBy".Translate(new object[]
                                 {
-                    pawn.Map.reservationManager.FirstReserverOf(loadableThing, pawn.Faction, true).LabelShort
+                    pawn.Map.physicalInteractionReservationManager.FirstReserverOf(loadableThing).LabelShort
                                 }) + ")", null, MenuOptionPriority.Default, null, null, 0f, null, null);
                             }
                             else
