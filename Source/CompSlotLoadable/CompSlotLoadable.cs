@@ -351,10 +351,10 @@ namespace CompSlotLoadable
             {
                 s.AppendLine();
                 s.AppendLine("CurrentlyLoaded".Translate() + ": " + slot.SlotOccupant.LabelCap);
-                s.AppendLine();
-                s.AppendLine("Effects".Translate() + ":");
                 if (((SlotLoadableDef)slot.def).doesChangeColor)
                 {
+                    s.AppendLine();
+                    s.AppendLine("Effects".Translate() + ":");
                     s.AppendLine("\t" + "ChangesPrimaryColor".Translate());
                 }
                 if (((SlotLoadableDef)slot.def).doesChangeStats)
@@ -374,7 +374,7 @@ namespace CompSlotLoadable
                                     float v = DetermineSlottableStatAugment(slot.SlotOccupant,mod.stat);
                                     string modstring = 	mod.stat.ValueToString(v, ToStringNumberSense.Offset);
 //                                    Log.Message("Determined slot stat augment "+v+" and made string "+modstring);
-                                    s.AppendLine("\t" + mod.stat.LabelCap + " " + modstring);
+                                    s.AppendLine("  " + mod.stat.LabelCap + " " + modstring);
                                     //s.AppendLine("\t" + mod.stat.LabelCap + " " + mod.ToStringAsOffset);
                                 }
                                 /*
@@ -404,7 +404,7 @@ namespace CompSlotLoadable
                             {
                                 string healText = "all";
                                 if (defHealChance.woundLimit != 0) healText = defHealChance.woundLimit.ToString();
-                                s.AppendLine("\t" + "DefensiveHealChance".Translate(new object[]
+                                s.AppendLine("  " + "DefensiveHealChance".Translate(new object[]
                                     {
                                         healText,
                                         defHealChance.chance.ToStringPercent()
@@ -415,7 +415,7 @@ namespace CompSlotLoadable
                             {
                                 string vampText = "all";
                                 if (vampChance.woundLimit != 0) vampText = defHealChance.woundLimit.ToString();
-                                s.AppendLine("\t" + "VampiricChance".Translate(new object[]
+                                s.AppendLine("  " + "VampiricChance".Translate(new object[]
                                     {
                                         vampText,
                                         vampChance.chance.ToStringPercent()
