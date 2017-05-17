@@ -12,3 +12,6 @@ C:\Program Files (x86)\Steam\steamapps\common\RimWorld\CompSlotLoadable\Assembli
 D:\SteamLibrary\steamapps\common\RimWorld\CompSlotLoadable\Assemblies\CompSlotLoadable.dll
 D:\SteamLibrary\steamapps\common\RimWorld\CompSlotLoadable\Source\CompSlotLoadable\obj\Debug\CompSlotLoadable.csprojResolveAssemblyReference.cache
 D:\SteamLibrary\steamapps\common\RimWorld\CompSlotLoadable\Source\CompSlotLoadable\obj\Debug\CompSlotLoadable.dll
+F:\CompSlotLoadable\Source\CompSlotLoadable\obj\Debug\CompSlotLoadable.csprojResolveAssemblyReference.cache
+F:\CompSlotLoadable\Source\CompSlotLoadable\obj\Debug\CompSlotLoadable.dll
+F:\CompSlotLoadable\Assemblies\CompSlotLoadable.dll
