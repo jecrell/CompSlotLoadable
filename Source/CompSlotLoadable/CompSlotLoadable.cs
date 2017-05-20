@@ -176,7 +176,7 @@ namespace CompSlotLoadable
                     //GetPawn.jobs.jobQueue.EnqueueFirst(job);
                     //GetPawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
                 }
-                else Messages.Message("IsDrafted".Translate(new object[]
+                else Messages.Message(string.Format(StringOf.IsDrafted, new object[]
                     {
                         GetPawn.Label
                     }), MessageSound.RejectInput);
@@ -238,21 +238,21 @@ namespace CompSlotLoadable
                                         }
                                         else
                                         {
-                                            floatList.Add(new FloatMenuOption(current.label + " " + "Unavailable".Translate(), delegate
+                                            floatList.Add(new FloatMenuOption(string.Format(StringOf.Unavailable, new object[] { current.label }), delegate
                                             {
                                             }, MenuOptionPriority.Default));
                                         }
                                     }
                                     else
                                     {
-                                        floatList.Add(new FloatMenuOption(current.label + " " + "Unavailable".Translate(), delegate
+                                        floatList.Add(new FloatMenuOption(string.Format(StringOf.Unavailable, new object[] { current.label }), delegate
                                         {
                                         }, MenuOptionPriority.Default));
                                     }
                                 }
                                 else
                                 {
-                                    floatList.Add(new FloatMenuOption(current.label + " " + "Unavailable".Translate(), delegate
+                                    floatList.Add(new FloatMenuOption(string.Format(StringOf.Unavailable, new object[] { current.label }), delegate
                                     {
                                     }, MenuOptionPriority.Default));
                                 }
@@ -260,7 +260,7 @@ namespace CompSlotLoadable
                         }
                         else
                         {
-                            floatList.Add(new FloatMenuOption("NoLoadOptions".Translate(), delegate
+                            floatList.Add(new FloatMenuOption(StringOf.NoLoadOptions, delegate
                             {
                             }, MenuOptionPriority.Default));
                         }
@@ -273,7 +273,7 @@ namespace CompSlotLoadable
             }
             if (!slot.IsEmpty())
             {
-                string text = "Unload".Translate() + " " + slot.SlotOccupant.Label;
+                string text = string.Format(StringOf.Unload, new object[] { slot.SlotOccupant.Label });
                 //Func<Rect, bool> extraPartOnGUI = (Rect rect) => Widgets.InfoCardButton(rect.x + 5f, rect.y + (rect.height - 24f) / 2f, current);
                 floatList.Add(new FloatMenuOption(text, delegate
                 {
@@ -350,12 +350,12 @@ namespace CompSlotLoadable
             if (!slot.IsEmpty())
             {
                 s.AppendLine();
-                s.AppendLine("CurrentlyLoaded".Translate() + ": " + slot.SlotOccupant.LabelCap);
+                s.AppendLine(string.Format(StringOf.CurrentlyLoaded, new object[] { slot.SlotOccupant.LabelCap }));
                 if (((SlotLoadableDef)slot.def).doesChangeColor)
                 {
                     s.AppendLine();
-                    s.AppendLine("Effects".Translate() + ":");
-                    s.AppendLine("\t" + "ChangesPrimaryColor".Translate());
+                    s.AppendLine(StringOf.Effects);
+                    s.AppendLine("  " + StringOf.ChangesPrimaryColor);
                 }
                 if (((SlotLoadableDef)slot.def).doesChangeStats)
                 {
@@ -367,7 +367,7 @@ namespace CompSlotLoadable
                             if (slotBonus.Props.statModifiers != null && slotBonus.Props.statModifiers.Count > 0)
                             {
                                 s.AppendLine();
-                                s.AppendLine("StatModifiers".Translate() + ":");
+                                s.AppendLine(StringOf.StatModifiers);
 
                                 foreach (StatModifier mod in slotBonus.Props.statModifiers)
                                 {
@@ -397,14 +397,14 @@ namespace CompSlotLoadable
                             if (damageDef != null)
                             {
                                 s.AppendLine();
-                                s.AppendLine("DamageType".Translate() + ": " + damageDef.LabelCap);
+                                s.AppendLine(string.Format(StringOf.DamageType, new object[] { damageDef.LabelCap }));
                             }
                             SlotBonusProps_DefensiveHealChance defHealChance = slotBonus.Props.defensiveHealChance;
                             if (defHealChance != null)
                             {
-                                string healText = "all";
+                                string healText = StringOf.all;
                                 if (defHealChance.woundLimit != 0) healText = defHealChance.woundLimit.ToString();
-                                s.AppendLine("  " + "DefensiveHealChance".Translate(new object[]
+                                s.AppendLine("  " + string.Format(StringOf.DefensiveHealChance, new object[]
                                     {
                                         healText,
                                         defHealChance.chance.ToStringPercent()
@@ -413,9 +413,9 @@ namespace CompSlotLoadable
                             SlotBonusProps_VampiricEffect vampChance = slotBonus.Props.vampiricHealChance;
                             if (vampChance != null)
                             {
-                                string vampText = "all";
+                                string vampText = StringOf.all;
                                 if (vampChance.woundLimit != 0) vampText = defHealChance.woundLimit.ToString();
-                                s.AppendLine("  " + "VampiricChance".Translate(new object[]
+                                s.AppendLine("  " + string.Format(StringOf.VampiricChance, new object[]
                                     {
                                         vampText,
                                         vampChance.chance.ToStringPercent()
@@ -503,22 +503,27 @@ namespace CompSlotLoadable
             {
                 if (slotBonus.Props != null)
                 {
-                    foreach ( StatModifier thisStat in slotBonus.Props.statModifiers ) {
-                        //Log.Message("Check for modding "+stat+"  against "+thisStat.stat);
-                        if ( thisStat.stat == stat ) {
-                            //Log.Message("adding in stat "+thisStat.stat+":"+thisStat.value+" to result "+retval);
-                            retval += thisStat.value;
-
-                            // apply stats parts from Slottable
-                            if (stat.parts != null)
+                    if (slotBonus.Props.statModifiers != null && slotBonus.Props.statModifiers.Count > 0)
+                    {
+                        foreach (StatModifier thisStat in slotBonus.Props.statModifiers)
+                        {
+                            //Log.Message("Check for modding "+stat+"  against "+thisStat.stat);
+                            if (thisStat.stat == stat)
                             {
-                                StatRequest req = StatRequest.For(slottable);
-                                for (int i = 0; i < stat.parts.Count; i++)
+                                //Log.Message("adding in stat "+thisStat.stat+":"+thisStat.value+" to result "+retval);
+                                retval += thisStat.value;
+
+                                // apply stats parts from Slottable
+                                if (stat.parts != null && stat.parts.Count > 0)
                                 {
-                                    //Log.Message("adding in parts "+stat.parts[i]);
-                                    stat.parts[i].TransformValue(req, ref retval);
+                                    StatRequest req = StatRequest.For(slottable);
+                                    for (int i = 0; i < stat.parts.Count; i++)
+                                    {
+                                        //Log.Message("adding in parts "+stat.parts[i]);
+                                        stat.parts[i].TransformValue(req, ref retval);
+                                    }
+                                    //Log.Message("added in parts of a stat for result "+retval);
                                 }
-                                //Log.Message("added in parts of a stat for result "+retval);
                             }
                         }
                     }

@@ -281,7 +281,7 @@ namespace CompSlotLoadable
             }
             else
             {
-                Messages.Message("ExceptionSlotAlreadyFilled".Translate(new object[]{
+                Messages.Message(string.Format(StringOf.ExceptionSlotAlreadyFilled, new object[]{
                     owner.Label
                 }), MessageSound.RejectInput);
             }

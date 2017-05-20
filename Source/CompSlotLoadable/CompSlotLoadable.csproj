@@ -63,6 +63,7 @@
     <Compile Include="SlotBonusProps_VampiricEffect.cs" />
     <Compile Include="SlotLoadable.cs" />
     <Compile Include="SlotLoadableDef.cs" />
+    <Compile Include="StringOf.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Languages\English\Keyed\CompSlotLoadable_Strings.xml" />
